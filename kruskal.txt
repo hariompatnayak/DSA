@@ -1,0 +1,58 @@
+class unionFind
+{
+    vector<int> id;
+    public:
+    unionFind(int N)
+    {
+        id.resize(N);
+        for(int i = 0; i < N; i++) id[i] = i;
+    }
+    int find(int p)
+    {
+        int root = p;
+        while(root != id[root]) root = id[root];
+        while(root != p)
+        {
+            int k = id[p];
+            id[p] = root;
+            p = k;
+        }
+        return root;
+    }
+    bool getUnion(int p, int q)
+    {
+        int root1 = find(p);
+        int root2 = find(q);
+        if(root1 == root2) return false;
+        if(root1 < root2) id[root2] = root1;
+        else id[root1] = root2;
+        return true;
+    }
+};
+
+bool myCmp(const vector<int>& v1, const vector<int>& v2)
+{
+    if(v1[2] < v2[2]) return true;
+    if(v1[2] > v2[2]) return false;
+    return v1[0] + v1[1] + v1[2] <= v2[0] + v2[1] + v2[2];
+}
+
+int kruskals(int g_nodes, vector<int> g_from, vector<int> g_to, vector<int> g_weight) {
+    unionFind obj(g_nodes);
+    int n = g_from.size();
+    vector<vector<int>> edges(n, vector<int>(3));
+    for(int i = 0; i < n; i++)
+    {
+        edges[i][0] = g_from[i] - 1;
+        edges[i][1] = g_to[i] - 1;
+        edges[i][2] = g_weight[i];
+    }
+    sort(edges.begin(), edges.end(), myCmp);
+    int result = 0;
+    for(int i = 0; i < n; i++)
+    {
+        if(obj.getUnion(edges[i][0], edges[i][1]))
+            result += edges[i][2];
+    }
+    return result;
+}
