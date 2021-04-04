@@ -1,0 +1,46 @@
+class NumArray {
+    vector<int> arr, bit;
+public:
+    NumArray(vector<int>& nums) {
+        int n = nums.size() + 1;
+        arr.resize(n);
+        bit.resize(n);
+        for(int i = 1; i < n; i++)
+        {
+            arr[i] = bit[i] = nums[i-1];
+        }
+        for(int i = 1; i < n; i++)
+        {
+            int j = i + rsb(i);
+            if(j < n) bit[j] += bit[i];
+        }
+    }
+    
+    int rsb(int x)
+    {
+        return x & ~(x-1); // x & (-x);
+    }
+    void update(int index, int val) {
+        int i = index + 1;
+        int diff = val - arr[i];
+        arr[i] += diff;
+        while(i < bit.size())
+        {
+            bit[i] += diff;
+            i += rsb(i);
+        }
+    }
+    int prefixSum(int i)
+    {
+        int sum = 0;
+        while(i > 0)
+        {
+            sum += bit[i];
+            i -= rsb(i);
+        }
+        return sum;
+    }
+    int sumRange(int left, int right) {
+        return prefixSum(right+1) - prefixSum(left);
+    }
+};
