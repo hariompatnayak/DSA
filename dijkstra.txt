@@ -1,0 +1,56 @@
+/*
+This is a solution for single source shortest path to all other vertices in a graph.
+This function takes as input number of nodes n, edges of the form {u, v} where graph is 1-indexed and source node s.
+It returns a vector of length (n-1) with distances of the indices from source with increasing order of indices values.
+*/
+class greaterPair
+{
+    public:
+    bool operator() (const pair<int, int>& p1, const pair<int, int>& p2)
+    {
+        return p1.second > p2.second;
+    }
+};
+
+typedef priority_queue<pair<int, int>, vector<pair<int, int>>, greaterPair> minPQ;
+
+vector<int> shortestReach(int n, vector<vector<int>> edges, int s) {
+    unordered_map<int, vector<pair<int, int>>> adj;
+    int m = edges.size();
+    for(int i = 0; i < m; i++)
+    {
+        adj[edges[i][0]].push_back({edges[i][1], edges[i][2]});
+        adj[edges[i][1]].push_back({edges[i][0], edges[i][2]});
+    }
+    minPQ pq;
+    pq.push({s, 0});
+    vector<int> dist(n+1, INT_MAX);
+    vector<bool> finished(n+1);
+    while(!pq.empty())
+    {
+        int curr = pq.top().first, d = pq.top().second;
+        pq.pop();
+        dist[curr] = d;
+        finished[curr] = true;
+        unordered_map<int, int> mapIntToDist;
+        while(!pq.empty())
+        {
+            mapIntToDist[pq.top().first] = pq.top().second;
+            pq.pop();
+        }
+        for(const auto& p : adj[curr])
+        {
+            if(!finished[p.first])
+                {
+                    dist[p.first] = min(dist[p.first], d + p.second);
+                    mapIntToDist[p.first] = dist[p.first];
+                }
+        }
+        pq = minPQ(mapIntToDist.begin(), mapIntToDist.end());
+    }
+    vector<int> result;
+    for(int i = 1; i < n+1; i++)
+        if(i != s)
+            result.push_back(dist[i] == INT_MAX ? -1 : dist[i]);
+    return result;
+}
