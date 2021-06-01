@@ -30,23 +30,17 @@ vector<int> shortestReach(int n, vector<vector<int>> edges, int s) {
     {
         int curr = pq.top().first, d = pq.top().second;
         pq.pop();
+        if(finished[curr]) continue;
         dist[curr] = d;
         finished[curr] = true;
-        unordered_map<int, int> mapIntToDist;
-        while(!pq.empty())
-        {
-            mapIntToDist[pq.top().first] = pq.top().second;
-            pq.pop();
-        }
         for(const auto& p : adj[curr])
         {
-            if(!finished[p.first])
+            if(dist[p.first] > d + p.second)
                 {
-                    dist[p.first] = min(dist[p.first], d + p.second);
-                    mapIntToDist[p.first] = dist[p.first];
+                    dist[p.first] = d + p.second;
+                    pq.push({p.first, dist[p.first]});
                 }
         }
-        pq = minPQ(mapIntToDist.begin(), mapIntToDist.end());
     }
     vector<int> result;
     for(int i = 1; i < n+1; i++)
