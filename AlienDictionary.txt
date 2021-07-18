@@ -1,0 +1,160 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+
+bool topologicalSort(vector<vector<bool>>& adj, int src, vector<bool>& visited, vector<bool>& inStack, string& order)
+{
+    // do reverse the order vector to get the actual result in caller
+    visited[src] = true;
+    inStack[src] = true;
+    for(int idx = 0; idx < 26; idx++)
+    {
+        if(adj[src][idx] && inStack[idx]) return false;
+        if(!visited[idx] && adj[src][idx] && !topologicalSort(adj, idx, visited, inStack, order)) return false;
+    }
+    order += (char)(src + 'a');
+    inStack[src] = false;
+    return true;
+}
+
+bool createAdjMatrix(vector<string>& dict, int top, int bottom, int col, vector<vector<bool>>& adj, vector<pair<int, int>>& pairWiseRows)
+{
+    // words between top and bottom rows upto col-1 are same, need to check the order of chars at col column between the two rows
+    int row1 = top, row2 = top;
+    for(; row2 <= bottom; row2++)
+    {
+        int prev = dict[row1][col];
+        int curr = dict[row2][col];
+        if(prev && curr)
+        {
+            if(curr != prev)
+            {
+                adj[prev-'a'][curr-'a'] = true;
+                if(row2 - row1 > 1) pairWiseRows.push_back({row1, row2 - 1});
+                row1 = row2;
+            }
+        }
+        else if(prev && !curr) return false;
+        else row1 = row2;
+    }
+    if(row2 - row1 > 1) pairWiseRows.push_back({row1, row2 - 1});
+    return true;
+}
+
+bool createGraph(vector<string>& dict, vector<vector<bool>>& adj)
+{
+    int rows = dict.size(), col = 0;
+    vector<pair<int, int>> pairWiseRows = {{0, rows - 1}};
+    vector<pair<int, int>> nextPairWiseRows;
+    while(!pairWiseRows.empty())
+    {
+        for(const auto& rowPair : pairWiseRows)
+            if(!createAdjMatrix(dict, rowPair.first, rowPair.second, col, adj, nextPairWiseRows)) return false;
+        pairWiseRows = nextPairWiseRows;
+        nextPairWiseRows.clear();
+        col++;
+    }
+    return true;
+}
+
+int getOccurrenceCharsInDict(vector<string>& dict)
+{
+    int occurs = 0;
+    for(const auto& word : dict)
+        for(const auto& letter : word)
+            occurs |= 1 << (letter - 'a');
+    return occurs;
+}
+
+void findOrderInDict(vector<string>& dict, FILE* fp=nullptr)
+{
+    vector<vector<bool>> adj(26, vector<bool>(26));
+    if(!createGraph(dict, adj))
+    {
+        if(!fp)
+            cout << "INVALID" << endl;
+        else
+            fprintf(fp, "INVALID\n");
+        return;
+    }
+    int occurs = getOccurrenceCharsInDict(dict);
+    string order;
+    bool isInvalid = false;
+    for(int start = 0; start < 26; start++)
+    {
+        if(!(occurs & (1 << start))) continue;
+        vector<bool> visited(26), inStack(26);
+        string currOrder;
+        int i = start;
+        do
+        {
+            if(!(occurs & (1<<i)) || visited[i])
+            {
+                i = (i + 1) % 26;
+                continue;
+            }
+            if(!topologicalSort(adj, i, visited, inStack, currOrder))
+            {
+                isInvalid = true;
+                break;
+            }
+            i = (i + 1) % 26;
+        } while(i != start);
+        if(isInvalid) break;
+        if(order.empty()) order = currOrder;
+        else if(order != currOrder)
+        {
+            isInvalid = true;
+            break;
+        }
+    }
+    if(isInvalid || order.empty())
+    {
+        if(!fp)
+            cout << "INVALID" << endl;
+        else
+            fprintf(fp, "INVALID\n");
+    }
+    else
+    {
+        reverse(order.begin(), order.end());
+        for(const auto& letter : order)
+        {
+            if(!fp)
+                cout << letter << ' ';
+            else
+                fprintf(fp, "%c ", letter);
+        }
+        if(!fp)
+            cout << endl;
+        else
+            fprintf(fp, "\n");
+    }
+}
+
+int main() {
+    int testcases, words;
+    //FILE* input = fopen("./inputAlien", "r");
+    //FILE* output = fopen("./outputAlien", "w");
+    cin >> testcases;
+    //char word[64];
+    //fscanf(input, "%d", &testcases);
+    for(int i = 0; i < testcases; i++)
+    {
+        cin >> words;
+        //fscanf(input, "%d", &words);
+        vector<string> dict;
+        string word;
+        for(int j = 0; j < words; j++)
+        {
+            cin >> word;
+            //fscanf(input, "%s", word);
+            dict.push_back(word);
+        }
+        findOrderInDict(dict);
+        //cout << i << endl;
+    }
+    //fclose(input);
+    //fclose(output);
+    return 0;
+}
