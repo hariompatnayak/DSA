@@ -1,0 +1,63 @@
+/************************************************************
+
+    Following is the Binary Tree node structure
+    
+    template <typename T>
+    class TreeNode {
+        public :
+        T data;
+        TreeNode<T> *left;
+        TreeNode<T> *right;
+
+        TreeNode(T data) {
+            this -> data = data;
+            left = NULL;
+            right = NULL;
+        }
+
+        ~TreeNode() {
+            if(left)
+                delete left;
+            if(right)
+                delete right;
+        }
+    };
+
+************************************************************/
+bool isValidBST(TreeNode<int>* root, int& treeNodeCount, int& maxCount)
+{
+    if(!root) return true;
+    bool isBST = true;
+    if(root->left)
+    {
+        TreeNode<int>* ptr = root->left;
+        while(ptr->right) ptr = ptr->right;
+        if(ptr->data >= root->data) isBST = false;
+    }
+    if(isBST && root->right)
+    {
+        TreeNode<int>* ptr = root->right;
+        while(ptr->left) ptr = ptr->left;
+        if(ptr->data <= root->data) isBST = false;
+    }
+    int leftCount = 0, rightCount = 0;
+    bool isLeftBST = isValidBST(root->left, leftCount, maxCount);
+    bool isRightBST = isValidBST(root->right, rightCount, maxCount);
+    if(isBST && isLeftBST && isRightBST)
+    {
+        treeNodeCount += 1 + leftCount + rightCount;
+        if(treeNodeCount > maxCount) maxCount = treeNodeCount;
+    }
+    else isBST = false;
+    if(isLeftBST && leftCount > maxCount) maxCount = leftCount;
+    if(isRightBST && rightCount > maxCount) maxCount = rightCount;
+    return isBST;
+}
+
+int largestBST(TreeNode<int>* root) 
+{
+    // Write your code here.
+    int maxCount = 0, treeNodeCount = 0;
+    isValidBST(root, treeNodeCount, maxCount);
+    return maxCount;
+}
